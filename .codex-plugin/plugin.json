@@ -1,6 +1,6 @@
 {
   "name": "eng-agents",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "PatSnap Engineering Agents for Codex — coding/security subagents, issue pipeline, project setup.",
   "author": {
     "name": "PatSnap"
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Engineering Agents",
     "shortDescription": "Coding & security agents, issue pipeline, project setup",
-    "longDescription": "Bind git repos, materialize project-scoped coding/security agents, and schedule issue polling from one Codex project.",
+    "longDescription": "Bind git repos, use project-scoped coding/security agents under .codex/agents, and schedule issue polling.",
     "developerName": "PatSnap",
     "category": "Product & Engineering",
     "capabilities": [

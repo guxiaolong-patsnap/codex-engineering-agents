@@ -1,6 +1,23 @@
 # codex-engineering-agents
 
-PatSnap Codex 插件 **eng-agents** 产品仓。市场在 [openai-plugins](http://git.patsnap.com/patsnap/openai-plugins)，本仓只放插件源码。
+PatSnap Codex 插件 **eng-agents**。市场：[openai-plugins](http://git.patsnap.com/patsnap/openai-plugins)。
+
+## 目录
+
+```text
+.
+├── .codex/
+│   ├── agents/          # subagent 定义（唯一源）
+│   └── config.toml
+├── .codex-plugin/       # 插件 manifest
+├── AGENTS.md
+├── skills/              # $eng-agents-setup / $issue-pipeline / …
+├── ui/setup/            # 配置页
+├── scripts/             # setup / apply
+├── schemas/
+├── config/              # managed-manifest
+└── assets/
+```
 
 ## 安装
 
@@ -9,9 +26,9 @@ codex plugin marketplace add git@git.patsnap.com:patsnap/openai-plugins.git
 codex plugin add eng-agents@patsnap-openai-plugins
 ```
 
-## 使用
+本仓可直接作为 Codex 执行项目（Trust 后加载 `.codex/agents/`）。
 
-在 Codex 中 Trust 执行项目后：
+## 使用
 
 ```text
 Run $eng-agents-setup
@@ -20,17 +37,17 @@ Run $eng-agents-setup
 或：
 
 ```bash
-bash plugins/eng-agents/scripts/open-setup-ui.sh --project .
+bash scripts/open-setup-ui.sh --project .
 ```
-
-会写入 `.git_projects.json`、`.codex/agents/`、`.codex/automations/eng-agents.json`。
 
 | Skill | 作用 |
 |-------|------|
-| `$eng-agents-setup` | 绑定仓库、物化 agents、配置 automation |
+| `$eng-agents-setup` | 绑定仓库、配置 automation |
 | `$issue-pipeline` | Issue → coding → security |
 | `$security-review` | 安全审计 |
 
+新增/修改 subagent：编辑 `.codex/agents/*.toml`。
+
 ## 发布
 
-改代码 → bump `plugins/eng-agents/.codex-plugin/plugin.json` version → push `main` → `codex plugin marketplace upgrade patsnap-openai-plugins`。
+bump `.codex-plugin/plugin.json` version → push `main` → `codex plugin marketplace upgrade patsnap-openai-plugins`。

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Copy plugin agents into <project>/.codex/agents/
+# Sync canonical agents from this repo's .codex/agents/ into another Codex project.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MANIFEST_JSON="$ROOT/config/managed-manifest.json"
-VERSION="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['version'])" 2>/dev/null || echo "0.4.0")"
+VERSION="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['version'])" 2>/dev/null || echo "0.5.0")"
 BEGIN="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['begin'])" 2>/dev/null || echo '<!-- BEGIN ENG-AGENTS MANAGED -->')"
 END="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['end'])" 2>/dev/null || echo '<!-- END ENG-AGENTS MANAGED -->')"
 PROJECT_MANIFEST_NAME="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON')).get('project_manifest_filename', '.eng-agents-manifest.json'))" 2>/dev/null || echo '.eng-agents-manifest.json')"
@@ -13,10 +13,7 @@ PROJECT=""
 DRY_RUN=0
 
 usage() {
-  cat <<EOF
-Usage: ./ensure-project-agents.sh --project <dir> [--dry-run]
-Writes <dir>/.codex/agents/, .codex/config.toml, AGENTS.md
-EOF
+  echo "Usage: ./ensure-project-agents.sh --project <dir> [--dry-run]"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -28,40 +25,38 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$PROJECT" ]]; then
-  usage
-  exit 1
-fi
-
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "python3 required" >&2
-  exit 1
-fi
+[[ -n "$PROJECT" ]] || { usage; exit 1; }
+command -v python3 >/dev/null || { echo "python3 required" >&2; exit 1; }
 
 PROJECT="$(cd "$PROJECT" && pwd)"
+SRC_AGENTS="$ROOT/.codex/agents"
+SRC_CONFIG="$ROOT/.codex/config.toml"
+SRC_AGENTS_MD="$ROOT/AGENTS.md"
+
+if [[ ! -d "$SRC_AGENTS" ]]; then
+  echo "Missing source agents: $SRC_AGENTS" >&2
+  exit 1
+fi
+
+if [[ "$PROJECT" == "$ROOT" ]]; then
+  echo "OK: this repo is the project; agents already at $SRC_AGENTS"
+  exit 0
+fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "[dry-run] would materialize from $ROOT/agents into $PROJECT/.codex/"
-  ls -1 "$ROOT/agents"/*.toml
+  echo "[dry-run] copy $SRC_AGENTS → $PROJECT/.codex/agents/"
+  ls -1 "$SRC_AGENTS"/*.toml
   exit 0
 fi
 
 TARGET_CODEX="$PROJECT/.codex"
 TARGET_AGENTS="$TARGET_CODEX/agents"
 MANIFEST="$TARGET_CODEX/$PROJECT_MANIFEST_NAME"
-SRC_AGENTS="$ROOT/agents"
-SRC_CONFIG="$ROOT/config/project-config.toml"
-SRC_AGENTS_MD="$ROOT/config/AGENTS.managed.md"
 
-echo "=== eng-agents ensure project agents ==="
-echo "Plugin:  $ROOT (v$VERSION)"
-echo "Project: $PROJECT/.codex/"
-echo
-
+echo "=== eng-agents → $PROJECT ==="
 mkdir -p "$TARGET_AGENTS"
 
 if [[ -f "$MANIFEST" ]]; then
-  echo "[1/4] Cleaning previous managed files (manifest)..."
   python3 - "$MANIFEST" "$PROJECT" <<'PY'
 import json, pathlib, sys
 manifest = json.loads(pathlib.Path(sys.argv[1]).read_text())
@@ -72,11 +67,8 @@ for rel in manifest.get("files", []):
         p.unlink()
         print(f"  removed {rel}")
 PY
-else
-  echo "[1/4] No previous manifest — skip cleanup"
 fi
 
-echo "[2/4] Materializing agents..."
 INSTALLED=()
 for src in "$SRC_AGENTS"/*.toml; do
   base="$(basename "$src")"
@@ -85,14 +77,12 @@ for src in "$SRC_AGENTS"/*.toml; do
   echo "  + .codex/agents/$base"
 done
 
-echo "[3/4] Writing .codex/config.toml ..."
 if [[ -f "$TARGET_CODEX/config.toml" ]]; then
   python3 - "$TARGET_CODEX/config.toml" <<'PY'
 from pathlib import Path
 import sys
 p = Path(sys.argv[1])
-text = p.read_text()
-out = text
+out = p.read_text()
 if "[features]" not in out:
     out += "\n[features]\nmulti_agent_v2 = true\n"
 elif "multi_agent_v2" not in out:
@@ -102,34 +92,31 @@ if "[agents]" not in out:
 elif "enabled" not in out.split("[agents]", 1)[-1].split("[", 1)[0]:
     out = out.replace("[agents]", "[agents]\nenabled = true", 1)
 p.write_text(out if out.endswith("\n") else out + "\n")
-print("  merged existing .codex/config.toml")
+print("  merged .codex/config.toml")
 PY
 else
   cp "$SRC_CONFIG" "$TARGET_CODEX/config.toml"
-  echo "  wrote .codex/config.toml"
+  echo "  + .codex/config.toml"
 fi
 INSTALLED+=(".codex/config.toml")
 
-echo "[4/4] Upserting AGENTS.md managed block..."
 python3 - "$PROJECT/AGENTS.md" "$SRC_AGENTS_MD" "$BEGIN" "$END" <<'PY'
 import pathlib, sys
 target = pathlib.Path(sys.argv[1])
 src = pathlib.Path(sys.argv[2])
 begin, end = sys.argv[3], sys.argv[4]
 body = src.read_text().rstrip()
+# strip existing managed markers from source body if present
+if begin in body and end in body:
+    body = body.split(begin, 1)[1].split(end, 1)[0].strip()
 block = f"{begin}\n{body}\n{end}\n"
 if target.exists():
     text = target.read_text()
     if begin in text and end in text:
-        pre = text.split(begin, 1)[0]
-        post = text.split(end, 1)[1]
-        if post.startswith("\n"):
-            post = post[1:]
-        text = pre + block + post
+        pre, post = text.split(begin, 1)[0], text.split(end, 1)[1]
+        text = pre + block + (post[1:] if post.startswith("\n") else post)
     else:
-        if text and not text.endswith("\n"):
-            text += "\n"
-        text = text + "\n" + block
+        text = (text + "\n" if text and not text.endswith("\n") else text) + "\n" + block
 else:
     text = block
 target.write_text(text)
@@ -143,20 +130,15 @@ manifest_path = pathlib.Path(sys.argv[1])
 version = sys.argv[2]
 files = sys.argv[3:]
 root = manifest_path.parent.parent
-hashes = {}
-for rel in files:
-    p = root / rel
-    if p.is_file():
-        hashes[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
-state = {
+hashes = {rel: hashlib.sha256((root / rel).read_bytes()).hexdigest()
+          for rel in files if (root / rel).is_file()}
+manifest_path.write_text(json.dumps({
     "package": "eng-agents",
-    "scope": "execution-project",
+    "scope": "project",
     "version": version,
     "files": files,
     "sha256": hashes,
-}
-manifest_path.parent.mkdir(parents=True, exist_ok=True)
-manifest_path.write_text(json.dumps(state, indent=2) + "\n")
+}, indent=2) + "\n")
 print(f"wrote {manifest_path}")
 PY
 

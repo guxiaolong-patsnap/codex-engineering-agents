@@ -1,1 +1,5 @@
 .DS_Store
+.git_projects.json
+.codex/automations/
+.codex/runs/
+.codex/.eng-agents-manifest.json

@@ -1,4 +1,5 @@
+# Ignore local machine binding (created by ./setup)
+.eng/
+.cea/
+*.log
 .DS_Store
-*.swp
-.idea/
-.vscode/

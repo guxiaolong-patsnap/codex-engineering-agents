@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Launcher: load agents from this repo; work on bound business repos.
+# Run ./setup --repo <path> first.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+CFG="$ROOT/.eng/config.json"
+
+if [[ ! -f "$CFG" ]]; then
+  echo "Missing .eng/config.json — run ./setup --repo /path/to/project first" >&2
+  exit 1
+fi
+
+if ! command -v codex >/dev/null 2>&1; then
+  echo "codex not found in PATH" >&2
+  exit 1
+fi
+
+ADD_ARGS=()
+REPO_LIST=""
+while IFS= read -r d; do
+  [[ -z "$d" ]] && continue
+  ADD_ARGS+=(--add-dir "$d")
+  REPO_LIST="${REPO_LIST}${d}"$'\n'
+done < <(python3 - "$CFG" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+for r in cfg.get("repos", []):
+    if r.get("enabled", True):
+        print(r["path"])
+PY
+)
+
+if [[ ${#ADD_ARGS[@]} -eq 0 ]]; then
+  echo "No enabled repos in $CFG" >&2
+  exit 1
+fi
+
+cmd="${1:-}"
+shift || true
+
+issue_prompt() {
+  local extra="${1:-}"
+  cat <<PROMPT
+You are the supervisor for Engineering Agents in this control-plane repo.
+Bound business repositories (writable via --add-dir):
+$REPO_LIST
+Driver: ISSUE.
+$extra
+
+Workflow:
+1) Identify the target repo and the issue / AC (from user text, ISSUE_URL, or local notes).
+2) Spawn coding to implement the smallest correct change in the target repo. Do not merge.
+3) Spawn security to audit the change (auth, injection, data exposure). Read-only.
+4) Return a concise summary: diffs, validation, security findings, next human action (MR/merge).
+
+Never force-push. Never merge protected branches without explicit human intent.
+PROMPT
+}
+
+schedule_prompt() {
+  cat <<PROMPT
+You are the supervisor for Engineering Agents (scheduled run).
+Bound business repositories:
+$REPO_LIST
+Driver: SCHEDULE / periodic sweep.
+1) For each enabled repo, briefly scan for open draft work, failing local signals, or TODO/FIXME hotspots if cheap; otherwise follow standing backlog rules from the user.
+2) Pick at most one small, high-value task (or report idle).
+3) If a task is clear: Spawn coding, then Spawn security.
+4) Do not merge. Summarize for human review.
+
+If nothing actionable, exit with a one-line idle report.
+PROMPT
+}
+
+case "$cmd" in
+  ""|chat|interactive)
+    echo "Starting Codex (agents from $ROOT; repos via --add-dir)."
+    echo "Trust this project if prompted."
+    exec codex -C "$ROOT" "${ADD_ARGS[@]}"
+    ;;
+  issue)
+    PROMPT="$(issue_prompt "$*")"
+    exec codex exec -C "$ROOT" "${ADD_ARGS[@]}" "$PROMPT"
+    ;;
+  schedule|cron)
+    PROMPT="$(schedule_prompt)"
+    exec codex exec -C "$ROOT" "${ADD_ARGS[@]}" "$PROMPT"
+    ;;
+  doctor)
+    echo "codex: $(command -v codex)"
+    codex doctor || true
+    echo "config: $CFG"
+    cat "$CFG"
+    echo "agents:"
+    ls -1 "$ROOT/.codex/agents"
+    ;;
+  print-cron)
+    echo "# Example weekday 09:00 local — edit path if needed"
+    echo "0 9 * * 1-5 cd \"$ROOT\" && ./eng schedule >>\"$ROOT/.eng/schedule.log\" 2>&1"
+    ;;
+  *)
+    cat <<EOF
+Usage:
+  ./eng                 # interactive Codex (load agents + bound repos)
+  ./eng issue [text]    # one-shot issue-driven run (codex exec)
+  ./eng schedule        # one-shot scheduled sweep (for cron/Automations)
+  ./eng print-cron      # print a sample crontab line
+  ./eng doctor          # sanity check
+EOF
+    exit 1
+    ;;
+esac

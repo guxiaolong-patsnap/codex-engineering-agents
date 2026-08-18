@@ -1,15 +1,20 @@
 # Project operating agreement
 
-This repository ships **project-scoped** Codex subagents in `.codex/agents/`.
+This repository is the **control plane** for multi-agent work on one or more bound business git repos (see `./setup` / `./eng`).
 
 ## Supervisor
 
-The primary Codex thread is the supervisor. It owns the user goal, routing, synthesis, and final answer. Subagents return structured handoffs; they do not chain to each other unless you explicitly ask for orchestration.
+The primary Codex thread is the supervisor. It owns the user goal, chooses target repos, routes to subagents, synthesizes results, and never merges without human intent.
 
 ## Agents
 
-- `coding` (`workspace-write`): implement features/fixes; no merge without human intent
-- `security` (`read-only`): OWASP-oriented audit; severity-ordered findings
+- `coding` (`workspace-write`): implement features/fixes in bound repos
+- `security` (`read-only`): OWASP-oriented audit of the change
+
+## Drivers
+
+- **Issue**: user or `./eng issue "…"` supplies issue/AC → spawn coding → spawn security → hand back for human MR/merge
+- **Schedule**: `./eng schedule` / cron → pick at most one small task or report idle → same spawn chain
 
 ## How to spawn
 
@@ -23,3 +28,4 @@ Spawn security to …
 - No merge to protected branches without human intent
 - No secrets in handoffs
 - Prefer the smallest correct change
+- Work only in bound business repos unless the user names another path

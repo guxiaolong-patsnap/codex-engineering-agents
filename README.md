@@ -1,48 +1,47 @@
 # codex-engineering-agents
 
-Codex engineering multi-agent team. **Project-scoped subagents live in `.codex/agents/`** (official Codex layout).
+Project-scoped Codex subagents under `.codex/agents/`, following the layout of
+[proflead/codex-agents-library](https://github.com/proflead/codex-agents-library).
 
 ## Layout
 
 ```text
 .codex/
-  config.toml              # multi_agent + role registry
-  agents/*.toml            # ★ project-scoped subagents (design/coding/eval/sre)
-.agents/plugins/marketplace.json
-plugins/eng-agent-team/    # installable skills (plugin)
-AGENTS.md                  # primary-thread / supervisor contract
+  config.toml           # multi_agent + max_threads / max_depth
+  agents/
+    coding.toml         # implementation
+    security.toml       # security audit (read-only)
+AGENTS.md
 ```
 
-Official refs: [Subagents](https://developers.openai.com/codex/subagents) · [Plugins](https://developers.openai.com/codex/plugins/build)
+## Quick start
 
-## Personal machine
+1. Clone this repo and open it as the Codex project root.
+2. Trust the project so `.codex/` loads.
+3. Spawn explicitly:
 
-```bash
-git clone https://github.com/guxiaolong-patsnap/codex-engineering-agents.git
-cd codex-engineering-agents
-# Open this folder in Codex and trust the project
+```text
+Spawn coding to implement … with tests
+Spawn security to audit this branch for OWASP and auth risks
 ```
 
-Subagents load from `.codex/agents/`. Optional skills:
+Codex spawns subagents when asked (or when `AGENTS.md` / skills instruct). Config keeps `max_depth = 1` and `max_threads = 6`.
+
+## Agents
+
+| Agent | Sandbox | Role |
+|-------|---------|------|
+| `coding` | `workspace-write` | Features, fixes, draft-ready diffs |
+| `security` | `read-only` | OWASP / auth / data-exposure review |
+
+## Optional skills plugin
 
 ```bash
 ./scripts/register-marketplace.sh
 codex plugin add eng-agent-team@codex-engineering-agents
 ```
 
-## Mac Mini (shared)
+## Docs
 
-1. Clone (or pull tags) to a fixed path, e.g. `/opt/codex-engineering-agents`
-2. Trust the project once in Codex
-3. Run agent sessions with this repo as the project root (or attached workspace)
-4. Upgrade: `git fetch --tags && git checkout vX.Y.Z`
-
-Do **not** rely on copying agents into `~/.codex/agents` as the product path.
-
-## Add a subagent
-
-See [docs/ADDING-A-SUBAGENT.md](docs/ADDING-A-SUBAGENT.md) — files go under `.codex/agents/`.
-
-## Design
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/ADDING-A-SUBAGENT.md](docs/ADDING-A-SUBAGENT.md)

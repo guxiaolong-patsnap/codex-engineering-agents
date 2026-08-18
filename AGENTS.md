@@ -1,26 +1,25 @@
 # Project operating agreement
 
-This repository ships Codex **plugins** (under `plugins/`) and **project subagents** (under `.codex/agents/`).
+This repository ships **project-scoped** Codex subagents in `.codex/agents/`.
 
 ## Supervisor
 
-The primary Codex thread is the supervisor. It owns the user goal, routing, synthesis, and final answer. Subagents return structured handoffs; they do not pass work directly to one another.
+The primary Codex thread is the supervisor. It owns the user goal, routing, synthesis, and final answer. Subagents return structured handoffs; they do not chain to each other unless you explicitly ask for orchestration.
 
-## Project subagents
+## Agents
 
-Registered in `.codex/config.toml`:
+- `coding` (`workspace-write`): implement features/fixes; no merge without human intent
+- `security` (`read-only`): OWASP-oriented audit; severity-ordered findings
 
-- `design` — requirements / intake / acceptance criteria
-- `coding` — implement changes toward a draft MR
-- `eval` — independent quality / security / acceptance checks
-- `sre` — release / observe (explicit request only; no silent prod changes)
+## How to spawn
 
-## Plugins
-
-Installable skills live in the local marketplace (`.agents/plugins/marketplace.json`). Prefer invoking skills with `$skill-name` for repeatable workflows.
+```text
+Spawn coding to …
+Spawn security to …
+```
 
 ## Gates
 
 - No merge to protected branches without human intent
-- No secrets in board events or handoffs
+- No secrets in handoffs
 - Prefer the smallest correct change

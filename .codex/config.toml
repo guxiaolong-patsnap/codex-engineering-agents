@@ -1,27 +1,11 @@
-# Project Codex config (trusted projects only)
+# Project-scoped Codex agents (trust this repo to load).
+# Pattern aligned with https://github.com/proflead/codex-agents-library
 
-# Multi-agent / subagents
 [features]
 multi_agent_v2 = true
 
 [agents]
 enabled = true
+max_threads = 6
+max_depth = 1
 interrupt_message = true
-# max_concurrent_threads_per_session = 4
-
-# Custom roles → .codex/agents/<name>.toml
-[agents.design]
-description = "Requirements and experience design: intake PRD/feedback into clear AC and issue contracts."
-config_file = "agents/design.toml"
-
-[agents.coding]
-description = "Implementation agent: turn an issue or AC into code and a draft MR."
-config_file = "agents/coding.toml"
-
-[agents.eval]
-description = "Independent evaluation: tests, review notes, security/quality triage against AC."
-config_file = "agents/eval.toml"
-
-[agents.sre]
-description = "Release and observability: deploy/observe only when explicitly requested."
-config_file = "agents/sre.toml"

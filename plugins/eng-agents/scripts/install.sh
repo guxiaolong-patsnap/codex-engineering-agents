@@ -8,11 +8,11 @@ chmod +x "$ROOT/scripts/sync-agents.sh" "$ROOT/scripts/install-project.sh"
 
 cat <<EOF
 
-Plugin engineering-agents ready.
+Plugin eng-agents ready.
 
 Install via PatSnap marketplace:
   codex plugin marketplace add git@git.patsnap.com:patsnap/openai-plugins.git
-  codex plugin add engineering-agents@openai-plugins
+  codex plugin add eng-agents@patsnap-openai-plugins
 
 Skills: \$issue-pipeline, \$security-review, \$project-install
 

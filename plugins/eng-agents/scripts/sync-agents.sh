@@ -5,16 +5,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-ENGINEERING_AGENTS_HOME="${ENGINEERING_AGENTS_HOME:-${ENG_AGENT_TEAM_HOME:-$HOME/.engineering-agents}}"
+ENG_AGENTS_HOME="${ENG_AGENTS_HOME:-${ENGINEERING_AGENTS_HOME:-${ENG_AGENT_TEAM_HOME:-$HOME/.eng-agents}}}"
 MANIFEST="$ROOT/config/managed-manifest.json"
 AGENTS_SRC="$ROOT/config/AGENTS.managed.md"
 AGENTS_DIR="$ROOT/agents"
 TARGET_AGENTS="$CODEX_HOME/agents"
 TARGET_AGENTS_MD="$CODEX_HOME/AGENTS.md"
-SYNC_STATE="$ENGINEERING_AGENTS_HOME/sync-state.json"
+SYNC_STATE="$ENG_AGENTS_HOME/sync-state.json"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 
-mkdir -p "$TARGET_AGENTS" "$ENGINEERING_AGENTS_HOME/backups"
+mkdir -p "$TARGET_AGENTS" "$ENG_AGENTS_HOME/backups"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 required for sync" >&2
@@ -26,7 +26,7 @@ FILES="$(python3 -c "import json;print('\n'.join(json.load(open('$MANIFEST'))['m
 BEGIN="$(python3 -c "import json;print(json.load(open('$MANIFEST'))['managed_agents_marker']['begin'])")"
 END="$(python3 -c "import json;print(json.load(open('$MANIFEST'))['managed_agents_marker']['end'])")"
 
-echo "Syncing engineering-agents $VERSION → $TARGET_AGENTS (state: $ENGINEERING_AGENTS_HOME)"
+echo "Syncing eng-agents $VERSION → $TARGET_AGENTS (state: $ENG_AGENTS_HOME)"
 
 synced=()
 for f in $FILES; do
@@ -42,7 +42,7 @@ for f in $FILES; do
       synced+=("$f")
       continue
     fi
-    cp "$dst" "$ENGINEERING_AGENTS_HOME/backups/${f}.bak.$TS"
+    cp "$dst" "$ENG_AGENTS_HOME/backups/${f}.bak.$TS"
     echo "backup: $f → backups/${f}.bak.$TS"
   fi
   cp "$src" "$dst"
@@ -87,7 +87,7 @@ for f in files:
     data = (agents_dir / f).read_bytes()
     hashes[f] = hashlib.sha256(data).hexdigest()
 state = {
-    "plugin": "engineering-agents",
+    "plugin": "eng-agents",
     "host": "codex",
     "scope": "personal",
     "version": version,

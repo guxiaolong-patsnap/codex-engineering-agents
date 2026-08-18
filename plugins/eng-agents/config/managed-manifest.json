@@ -1,19 +1,19 @@
 {
-  "plugin": "engineering-agents",
+  "plugin": "eng-agents",
   "version": "0.2.0",
   "managed_agents": [
     "coding.toml",
     "security.toml"
   ],
   "managed_agents_marker": {
-    "begin": "<!-- BEGIN ENGINEERING-AGENTS MANAGED -->",
-    "end": "<!-- END ENGINEERING-AGENTS MANAGED -->"
+    "begin": "<!-- BEGIN ENG-AGENTS MANAGED -->",
+    "end": "<!-- END ENG-AGENTS MANAGED -->"
   },
-  "project_manifest_filename": ".engineering-agents-manifest.json",
+  "project_manifest_filename": ".eng-agents-manifest.json",
   "sync_targets": {
     "personal_agents_dir": "${CODEX_HOME}/agents",
     "personal_agents_md": "${CODEX_HOME}/AGENTS.md",
-    "state_dir": "${ENGINEERING_AGENTS_HOME}"
+    "state_dir": "${ENG_AGENTS_HOME}"
   },
   "notes": {
     "personal": "sync-agents.sh writes to ~/.codex/agents (plugin default)",

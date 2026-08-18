@@ -1,5 +1,5 @@
 {
-  "name": "engineering-agents",
+  "name": "eng-agents",
   "version": "0.2.0",
   "description": "Engineering Agents for Codex: coding and security subagents, issue-driven SDLC skills, and optional project-scoped install.",
   "skills": "./skills",
@@ -7,7 +7,7 @@
     "displayName": "Engineering Agents",
     "shortDescription": "Coding + Security subagents with issue pipeline and project install",
     "defaultPrompt": [
-      "If this git repo has no .codex/agents from engineering-agents, run $project-install first. Then use $issue-pipeline for implementation work or $security-review for audit-only tasks."
+      "If this git repo has no .codex/agents from eng-agents, run $project-install first. Then use $issue-pipeline for implementation work or $security-review for audit-only tasks."
     ]
   }
 }

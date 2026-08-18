@@ -5,9 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MANIFEST_JSON="$ROOT/config/managed-manifest.json"
 VERSION="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['version'])" 2>/dev/null || echo "0.2.0")"
-BEGIN="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['begin'])" 2>/dev/null || echo '<!-- BEGIN ENGINEERING-AGENTS MANAGED -->')"
-END="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['end'])" 2>/dev/null || echo '<!-- END ENGINEERING-AGENTS MANAGED -->')"
-PROJECT_MANIFEST_NAME="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON')).get('project_manifest_filename', '.engineering-agents-manifest.json'))" 2>/dev/null || echo '.engineering-agents-manifest.json')"
+BEGIN="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['begin'])" 2>/dev/null || echo '<!-- BEGIN ENG-AGENTS MANAGED -->')"
+END="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['end'])" 2>/dev/null || echo '<!-- END ENG-AGENTS MANAGED -->')"
+PROJECT_MANIFEST_NAME="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON')).get('project_manifest_filename', '.eng-agents-manifest.json'))" 2>/dev/null || echo '.eng-agents-manifest.json')"
 
 INTO=""
 FORCE=0
@@ -68,7 +68,7 @@ SRC_AGENTS="$ROOT/agents"
 SRC_CONFIG="$ROOT/config/project-config.toml"
 SRC_AGENTS_MD="$ROOT/config/AGENTS.managed.md"
 
-echo "=== engineering-agents project install ==="
+echo "=== eng-agents project install ==="
 echo "Plugin:  $ROOT (v$VERSION)"
 echo "Target:  $INTO/.codex/"
 echo
@@ -164,7 +164,7 @@ for rel in files:
     if p.is_file():
         hashes[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
 state = {
-    "package": "engineering-agents",
+    "package": "eng-agents",
     "scope": "project",
     "version": version,
     "files": files,

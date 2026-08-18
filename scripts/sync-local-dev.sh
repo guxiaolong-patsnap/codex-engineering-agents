@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/plugins/engineering-agents/agents"
+SRC="$ROOT/plugins/eng-agents/agents"
 DST="$ROOT/.codex/agents"
 
 mkdir -p "$DST"

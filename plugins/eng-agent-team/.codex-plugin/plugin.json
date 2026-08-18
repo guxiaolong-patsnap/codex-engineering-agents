@@ -1,0 +1,13 @@
+{
+  "name": "eng-agent-team",
+  "version": "0.1.0",
+  "description": "Engineering Agent Team skills for Codex: onboard, feature pipeline, bugfix, and board reporting.",
+  "skills": "./skills",
+  "interface": {
+    "displayName": "Engineering Agent Team",
+    "shortDescription": "SDLC skills for engineering multi-agent workflows",
+    "defaultPrompt": [
+      "Summarize available eng-agent-team skills, then run onboard-repos if project binding is missing."
+    ]
+  }
+}

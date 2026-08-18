@@ -1,13 +1,41 @@
 {
   "name": "eng-agents",
-  "version": "0.3.0",
-  "description": "Coding and security Codex subagents with issue pipeline skills.",
+  "version": "0.3.1",
+  "description": "PatSnap all-in-one Engineering Agents platform for Codex — hosts product-and-engineering team agents and skills in one plugin.",
+  "author": {
+    "name": "PatSnap"
+  },
+  "homepage": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
+  "repository": "https://github.com/guxiaolong-patsnap/codex-engineering-agents.git",
+  "license": "UNLICENSED",
+  "keywords": [
+    "engineering-agents",
+    "eng-agents",
+    "codex",
+    "subagents",
+    "sdlc",
+    "patsnap"
+  ],
   "skills": "./skills",
   "interface": {
     "displayName": "Engineering Agents",
-    "shortDescription": "Coding + Security subagents for SDLC",
+    "shortDescription": "All-in-one platform for product & engineering team agents and skills",
+    "longDescription": "Engineering Agents is PatSnap's unified Codex plugin for the full product-and-engineering team. It hosts specialized agents (coding, security, and more over time) and reusable skills (issue pipeline, security review, project install) in one place. Install once via the plugin marketplace; optionally vendor agents into a git repo for team-wide consistency.",
+    "developerName": "PatSnap",
+    "category": "Product & Engineering",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
+    "privacyPolicyURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
+    "termsOfServiceURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
     "defaultPrompt": [
-      "Use $issue-pipeline for implementation work, $security-review for audits, or $project-install to vendor agents into this git repo."
-    ]
+      "Run $issue-pipeline for the current task",
+      "Run $security-review on this change",
+      "Run $project-install for this repo"
+    ],
+    "brandColor": "#2563EB"
   }
 }

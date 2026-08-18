@@ -1,8 +1,3 @@
-# Engineering Agents — control plane
-
-Product repo for the **`engineering-agents`** Codex plugin (distributed via PatSnap `openai-plugins` marketplace).
-
-<!-- BEGIN ENGINEERING-AGENTS MANAGED -->
 # Engineering Agent Team — operating agreement
 
 The primary Codex thread is the **supervisor**. It owns the user goal, routes to subagents, synthesizes results, and never merges without human intent.
@@ -32,12 +27,3 @@ Spawn security to …
 - No merge to protected branches without human intent
 - No secrets in handoffs
 - Prefer the smallest correct change
-<!-- END ENGINEERING-AGENTS MANAGED -->
-
-## Control plane (optional)
-
-- `./setup --repo /path/to/app` — bind business repos to `.eng/config.json`
-- `./eng` — interactive Codex with `--add-dir` for bound repos
-- `./eng issue "…"` / `./eng schedule` — one-shot supervisor runs
-
-Agent source of truth: `plugins/engineering-agents/agents/`. Run `./scripts/sync-local-dev.sh` after editing agents.

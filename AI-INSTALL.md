@@ -1,53 +1,42 @@
-# AI agent install guide — project-scoped eng-agents
+# AI agent install guide — engineering-agents
 
-You are installing **codex-engineering-agents** into a **business git repository**
-as project-scoped Codex subagents (`.codex/agents/`), NOT into `~/.codex/`.
-
-This mirrors the one-command UX of [my-codex](https://github.com/sehoon787/my-codex),
-but the install target is **per-repo** so the team shares agents via git.
-
-## Fast path
-
-From a checkout of this agents repo:
+## 方式 1：PatSnap 插件市场（推荐）
 
 ```bash
-bash install.sh --into /absolute/path/to/business-repo
+codex plugin marketplace add git@git.patsnap.com:patsnap/openai-plugins.git
+codex plugin add engineering-agents@openai-plugins
 ```
 
-Or:
+同步 subagents 到 `~/.codex/agents/`（装插件后执行一次）：
+
+```bash
+git clone --depth 1 https://github.com/guxiaolong-patsnap/codex-engineering-agents.git /tmp/eng-agents
+bash /tmp/eng-agents/plugins/engineering-agents/scripts/install.sh
+```
+
+启用 multi-agent（若尚未配置）：
+
+```toml
+[features]
+multi_agent_v2 = true
+
+[agents]
+enabled = true
+```
+
+会话技能：`$issue-pipeline`、`$security-review`、`$project-install`。
+
+## 方式 2：项目级 install（团队 via git）
 
 ```bash
 git clone --depth 1 https://github.com/guxiaolong-patsnap/codex-engineering-agents.git /tmp/eng-agents
 bash /tmp/eng-agents/install.sh --into /path/to/business-repo
-rm -rf /tmp/eng-agents
 ```
 
-## What gets written (project only)
+写入 `<project>/.codex/agents/`、`.codex/config.toml`、`.codex/.engineering-agents-manifest.json`、`AGENTS.md` 管理块。  
+**不**修改 `~/.codex/agents/`。
 
-| Path | Contents |
-|------|----------|
-| `<project>/.codex/agents/coding.toml` | Coding agent |
-| `<project>/.codex/agents/security.toml` | Security agent |
-| `<project>/.codex/config.toml` | `multi_agent_v2` + agents enabled |
-| `<project>/AGENTS.md` | Managed operating agreement block |
-| `<project>/.codex/.eng-agents-manifest.json` | Manifest for safe reinstall |
+## 升级
 
-Does **not** modify `~/.codex/agents/`.
-
-## After install
-
-```bash
-cd /path/to/business-repo
-codex
-# Trust this project
-# Spawn coding to …
-# Spawn security to …
-```
-
-Commit the installed `.codex/` + `AGENTS.md` so teammates get the same agents on clone.
-
-## Upgrade
-
-Re-run the same `install.sh --into <project>`. Only paths listed in the previous
-manifest are removed before rewrite; user-added agent TOMLs outside the manifest
-are left alone.
+- Plugin：`codex plugin marketplace upgrade openai-plugins` + `scripts/install.sh`
+- 项目级：重跑 `install.sh --into <project>`

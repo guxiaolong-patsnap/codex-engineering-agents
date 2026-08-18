@@ -33,15 +33,3 @@ Codex spawns subagents when asked (or when `AGENTS.md` / skills instruct). Confi
 |-------|---------|------|
 | `coding` | `workspace-write` | Features, fixes, draft-ready diffs |
 | `security` | `read-only` | OWASP / auth / data-exposure review |
-
-## Optional skills plugin
-
-```bash
-./scripts/register-marketplace.sh
-codex plugin add eng-agent-team@codex-engineering-agents
-```
-
-## Docs
-
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/ADDING-A-SUBAGENT.md](docs/ADDING-A-SUBAGENT.md)

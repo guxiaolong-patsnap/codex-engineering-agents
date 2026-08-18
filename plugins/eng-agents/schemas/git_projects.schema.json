@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://patsnap.local/schemas/eng-agents-git-projects.json",
+  "title": "Engineering Agents bound git projects",
+  "type": "object",
+  "required": ["version", "projects"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "provider", "remote"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "provider": { "enum": ["gitlab", "github"] },
+          "remote": {
+            "type": "string",
+            "description": "HTTPS/SSH clone URL or path_with_namespace"
+          },
+          "path": {
+            "type": "string",
+            "description": "Absolute local checkout path for --add-dir"
+          },
+          "default_branch": { "type": "string" },
+          "enabled": { "type": "boolean", "default": true },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "routing": {
+      "type": "array",
+      "description": "Issue label / keyword → sub-agent routing",
+      "items": {
+        "type": "object",
+        "required": ["agents"],
+        "properties": {
+          "labels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Issue labels to match (any)"
+          },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Title/body keywords to match (any)"
+          },
+          "agents": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "pipeline": {
+            "type": "string",
+            "enum": ["issue-pipeline", "spawn-only"],
+            "default": "issue-pipeline"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "automation": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "interval_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 1440,
+          "default": 10
+        },
+        "name": { "type": "string" },
+        "model": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "credentials": {
+      "type": "object",
+      "description": "Env var names only — never store raw tokens here",
+      "properties": {
+        "gitlab_token_env": { "type": "string", "default": "GITLAB_TOKEN" },
+        "github_token_env": { "type": "string", "default": "GITHUB_TOKEN" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

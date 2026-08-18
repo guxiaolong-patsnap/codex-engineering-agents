@@ -1,7 +1,7 @@
 {
   "name": "eng-agents",
-  "version": "0.3.3",
-  "description": "PatSnap all-in-one Engineering Agents platform for Codex — hosts product-and-engineering team agents and skills in one plugin.",
+  "version": "0.4.0",
+  "description": "PatSnap Engineering Agents for Codex — coding/security subagents, issue pipeline, project setup.",
   "author": {
     "name": "PatSnap"
   },
@@ -19,8 +19,8 @@
   "skills": "./skills",
   "interface": {
     "displayName": "Engineering Agents",
-    "shortDescription": "All-in-one platform for product & engineering team agents and skills",
-    "longDescription": "Engineering Agents is PatSnap's unified Codex plugin for the full product-and-engineering team. It hosts specialized agents (coding, security, and more over time) and reusable skills (issue pipeline, security review, project install) in one place. Install once via the plugin marketplace; optionally vendor agents into a git repo for team-wide consistency.",
+    "shortDescription": "Coding & security agents, issue pipeline, project setup",
+    "longDescription": "Bind git repos, materialize project-scoped coding/security agents, and schedule issue polling from one Codex project.",
     "developerName": "PatSnap",
     "category": "Product & Engineering",
     "capabilities": [
@@ -32,9 +32,9 @@
     "privacyPolicyURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
     "termsOfServiceURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
     "defaultPrompt": [
+      "Run $eng-agents-setup",
       "Run $issue-pipeline for the current task",
-      "Run $security-review on this change",
-      "Run $project-install for this repo"
+      "Run $security-review on this change"
     ],
     "brandColor": "#2563EB",
     "composerIcon": "./assets/icon.png",

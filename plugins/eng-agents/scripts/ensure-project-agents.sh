@@ -1,44 +1,34 @@
 #!/usr/bin/env bash
-# Project-level installer — writes to <project>/.codex/, NOT ~/.codex/agents.
+# Copy plugin agents into <project>/.codex/agents/
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MANIFEST_JSON="$ROOT/config/managed-manifest.json"
-VERSION="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['version'])" 2>/dev/null || echo "0.2.0")"
+VERSION="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['version'])" 2>/dev/null || echo "0.4.0")"
 BEGIN="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['begin'])" 2>/dev/null || echo '<!-- BEGIN ENG-AGENTS MANAGED -->')"
 END="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON'))['managed_agents_marker']['end'])" 2>/dev/null || echo '<!-- END ENG-AGENTS MANAGED -->')"
 PROJECT_MANIFEST_NAME="$(python3 -c "import json; print(json.load(open('$MANIFEST_JSON')).get('project_manifest_filename', '.eng-agents-manifest.json'))" 2>/dev/null || echo '.eng-agents-manifest.json')"
 
-INTO=""
-FORCE=0
+PROJECT=""
 DRY_RUN=0
 
 usage() {
   cat <<EOF
-Usage:
-  ./install-project.sh --into <project-dir> [--force] [--dry-run]
-
-Installs project-scoped Codex agents into:
-  <project-dir>/.codex/agents/*.toml
-  <project-dir>/.codex/config.toml
-  <project-dir>/AGENTS.md (managed block)
-  <project-dir>/.codex/$PROJECT_MANIFEST_NAME
-
-Does NOT modify ~/.codex/agents.
+Usage: ./ensure-project-agents.sh --project <dir> [--dry-run]
+Writes <dir>/.codex/agents/, .codex/config.toml, AGENTS.md
 EOF
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --into) INTO="$2"; shift 2 ;;
-    --force) FORCE=1; shift ;;
+    --project) PROJECT="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 1 ;;
   esac
 done
 
-if [[ -z "$INTO" ]]; then
+if [[ -z "$PROJECT" ]]; then
   usage
   exit 1
 fi
@@ -48,36 +38,31 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-INTO="$(cd "$INTO" && pwd)"
+PROJECT="$(cd "$PROJECT" && pwd)"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "[dry-run] would install from $ROOT/agents into $INTO/.codex/"
+  echo "[dry-run] would materialize from $ROOT/agents into $PROJECT/.codex/"
   ls -1 "$ROOT/agents"/*.toml
   exit 0
 fi
 
-if [[ ! -d "$INTO/.git" && "$FORCE" -ne 1 ]]; then
-  echo "Refusing: $INTO is not a git repo (pass --force to override)." >&2
-  exit 1
-fi
-
-TARGET_CODEX="$INTO/.codex"
+TARGET_CODEX="$PROJECT/.codex"
 TARGET_AGENTS="$TARGET_CODEX/agents"
 MANIFEST="$TARGET_CODEX/$PROJECT_MANIFEST_NAME"
 SRC_AGENTS="$ROOT/agents"
 SRC_CONFIG="$ROOT/config/project-config.toml"
 SRC_AGENTS_MD="$ROOT/config/AGENTS.managed.md"
 
-echo "=== eng-agents project install ==="
+echo "=== eng-agents ensure project agents ==="
 echo "Plugin:  $ROOT (v$VERSION)"
-echo "Target:  $INTO/.codex/"
+echo "Project: $PROJECT/.codex/"
 echo
 
 mkdir -p "$TARGET_AGENTS"
 
 if [[ -f "$MANIFEST" ]]; then
   echo "[1/4] Cleaning previous managed files (manifest)..."
-  python3 - "$MANIFEST" "$INTO" <<'PY'
+  python3 - "$MANIFEST" "$PROJECT" <<'PY'
 import json, pathlib, sys
 manifest = json.loads(pathlib.Path(sys.argv[1]).read_text())
 root = pathlib.Path(sys.argv[2])
@@ -91,7 +76,7 @@ else
   echo "[1/4] No previous manifest — skip cleanup"
 fi
 
-echo "[2/4] Installing agents..."
+echo "[2/4] Materializing agents..."
 INSTALLED=()
 for src in "$SRC_AGENTS"/*.toml; do
   base="$(basename "$src")"
@@ -126,7 +111,7 @@ fi
 INSTALLED+=(".codex/config.toml")
 
 echo "[4/4] Upserting AGENTS.md managed block..."
-python3 - "$INTO/AGENTS.md" "$SRC_AGENTS_MD" "$BEGIN" "$END" <<'PY'
+python3 - "$PROJECT/AGENTS.md" "$SRC_AGENTS_MD" "$BEGIN" "$END" <<'PY'
 import pathlib, sys
 target = pathlib.Path(sys.argv[1])
 src = pathlib.Path(sys.argv[2])
@@ -165,7 +150,7 @@ for rel in files:
         hashes[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
 state = {
     "package": "eng-agents",
-    "scope": "project",
+    "scope": "execution-project",
     "version": version,
     "files": files,
     "sha256": hashes,
@@ -175,16 +160,4 @@ manifest_path.write_text(json.dumps(state, indent=2) + "\n")
 print(f"wrote {manifest_path}")
 PY
 
-cat <<EOF
-
-Project install OK.
-
-Next:
-  cd $INTO
-  codex
-  # Trust this project
-  # Spawn coding to … / Spawn security to …
-  # Or use plugin skills: \$issue-pipeline / \$security-review
-
-Commit .codex/ + AGENTS.md so teammates share the same agents.
-EOF
+echo "OK: agents in $PROJECT/.codex/agents/"

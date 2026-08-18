@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://patsnap.local/schemas/eng-agents-automation-spec.json",
+  "title": "Engineering Agents automation spec (project-local source of truth)",
+  "type": "object",
+  "required": ["version", "id", "name", "prompt", "schedule"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "enabled": { "type": "boolean", "default": true },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "prompt": { "type": "string" },
+    "schedule": {
+      "type": "object",
+      "required": ["interval_minutes"],
+      "properties": {
+        "interval_minutes": { "type": "integer", "minimum": 5, "maximum": 1440 },
+        "rrule": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "model": { "type": "string" },
+    "execution_environment": {
+      "type": "string",
+      "enum": ["local", "cloud"],
+      "default": "local"
+    },
+    "project_path": {
+      "type": "string",
+      "description": "Codex execution project root (cwd for automation runs)"
+    },
+    "synced_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

@@ -16,11 +16,12 @@ Spawn coding to …
 Spawn security to …
 ```
 
-## Skills
+## Skills (repo)
 
-- `$eng-agents-setup` — bind repos, agents, automation
 - `$issue-pipeline` — issue → coding → security
 - `$security-review` — audit only
+
+Install / bind repos / automations via the **eng-agents** plugin (`$eng-agents-setup`).
 
 ## Gates
 

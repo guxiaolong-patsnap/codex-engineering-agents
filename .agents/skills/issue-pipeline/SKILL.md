@@ -14,7 +14,7 @@ description: Issue- or AC-driven SDLC — spawn coding to implement, then securi
 
 ## Constraints
 
-- Agents must exist in `.codex/agents/` (run `$eng-agents-setup` if missing)
+- Agents must exist in `.codex/agents/` (open/Trust this product repo after `$eng-agents-setup`)
 - No force-push or merge to protected branches
 - No invented requirements; escalate AC gaps
 

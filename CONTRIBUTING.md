@@ -4,7 +4,7 @@ This repository publishes versioned Engineering Agents content and contains its 
 
 ## Add or change an agent
 
-1. Add or edit `.codex/agents/<id>.toml`.
+1. Add or edit `agents/<id>.toml`.
 2. Keep `name` equal to `<id>` and use a stable lowercase kebab-case ID.
 3. Define a focused role, handoff contract, and least-privilege `sandbox_mode`.
 4. Do not set `model` or `model_reasoning_effort`; runtime instance policy owns both.
@@ -12,7 +12,7 @@ This repository publishes versioned Engineering Agents content and contains its 
 
 ## Add or change a skill
 
-1. Use `.agents/skills/<id>/SKILL.md` and the same `name` in YAML frontmatter.
+1. Use `agents/skills/<id>/SKILL.md` and the same `name` in YAML frontmatter.
 2. Keep discovery text concise and workflow instructions free of machine-specific setup.
 3. Declare its owner, `dispatcher` or `specialist` kind, and typed dependencies in the manifest.
 4. A dispatcher may invoke only declared agents or skills. Do not create dependency cycles.

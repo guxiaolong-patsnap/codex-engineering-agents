@@ -20,19 +20,19 @@ class EngAgentsTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = pathlib.Path(self.tmp.name)
         self.catalog = self.root / "catalog-source"
-        (self.catalog / ".codex/agents").mkdir(parents=True)
-        (self.catalog / ".agents/skills/poll").mkdir(parents=True)
+        (self.catalog / "agents").mkdir(parents=True)
+        (self.catalog / "agents/skills/poll").mkdir(parents=True)
         (self.catalog / "integrations/cli/tool").mkdir(parents=True)
         (self.catalog / "catalog").mkdir()
-        (self.catalog / ".codex/agents/worker.toml").write_text('name="worker"\n')
-        (self.catalog / ".agents/skills/poll/SKILL.md").write_text("---\nname: poll\ndescription: test\n---\n# Poll\n")
+        (self.catalog / "agents/worker.toml").write_text('name="worker"\n')
+        (self.catalog / "agents/skills/poll/SKILL.md").write_text("---\nname: poll\ndescription: test\n---\n# Poll\n")
         (self.catalog / "integrations/cli/tool/integration.json").write_text(json.dumps({"id": "tool", "kind": "cli", "executable": "python3", "healthCheck": {"arguments": ["--version"]}}) + "\n")
         self.manifest_data = {
             "apiVersion": eng.API_VERSION,
             "catalogVersion": "1.0.0",
             "compatibility": {"plugin": ">=1.0.0 <2.0.0"},
-            "agents": [{"id": "worker", "path": ".codex/agents/worker.toml", "owner": "team", "skillDependencies": [], "integrationDependencies": ["tool"]}],
-            "skills": [{"id": "poll", "path": ".agents/skills/poll", "owner": "team", "kind": "dispatcher", "agentDependencies": ["worker"], "skillDependencies": [], "integrationDependencies": ["tool"]}],
+            "agents": [{"id": "worker", "path": "agents/worker.toml", "owner": "team", "skillDependencies": [], "integrationDependencies": ["tool"]}],
+            "skills": [{"id": "poll", "path": "agents/skills/poll", "owner": "team", "kind": "dispatcher", "agentDependencies": ["worker"], "skillDependencies": [], "integrationDependencies": ["tool"]}],
             "integrations": [{"id": "tool", "path": "integrations/cli/tool", "owner": "team", "kind": "cli"}],
             "entrypoints": {"scheduledPoll": {"skill": "poll"}},
         }
@@ -147,7 +147,7 @@ class EngAgentsTests(unittest.TestCase):
     def test_catalog_digest_rejects_nested_symlink(self):
         manifest = eng.validate_catalog(self.catalog)
         outside = self.root / "host-local.txt"; outside.write_text("local data\n")
-        (self.catalog / ".agents/skills/poll/linked.txt").symlink_to(outside)
+        (self.catalog / "agents/skills/poll/linked.txt").symlink_to(outside)
         with self.assertRaises(eng.ControlPlaneError): eng.catalog_digest(self.catalog, manifest)
 
     def test_resolve_rejects_dirty_git_catalog(self):
@@ -156,7 +156,7 @@ class EngAgentsTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.catalog), "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-qm", "catalog"], check=True)
         _, lock = eng.resolve_catalog(str(self.catalog), "HEAD", self.root / "cache")
         self.assertRegex(lock["commit"], r"^[0-9a-f]{40}$")
-        (self.catalog / ".codex/agents/worker.toml").write_text('name="worker"\ndescription="dirty"\n')
+        (self.catalog / "agents/worker.toml").write_text('name="worker"\ndescription="dirty"\n')
         with self.assertRaises(eng.ControlPlaneError): eng.resolve_catalog(str(self.catalog), "HEAD", self.root / "cache")
 
     def test_rejects_catalog_url_credentials(self):
@@ -180,7 +180,7 @@ class EngAgentsTests(unittest.TestCase):
         first_lock = {"source": str(self.catalog), "requestedRef": "v1", "commit": "1111111111111", "digest": eng.catalog_digest(self.catalog, first_manifest), "materializedFrom": str(self.catalog)}
         eng.materialize_runtime(runtime, self.catalog, first_lock, first_manifest)
         first_generation = (runtime / ".eng-agents/current").resolve().name
-        (self.catalog / ".codex/agents/worker.toml").write_text('name="worker"\ndescription="v2"\n')
+        (self.catalog / "agents/worker.toml").write_text('name="worker"\ndescription="v2"\n')
         second_manifest = eng.validate_catalog(self.catalog)
         second_lock = {"source": str(self.catalog), "requestedRef": "v2", "commit": "2222222222222", "digest": eng.catalog_digest(self.catalog, second_manifest), "materializedFrom": str(self.catalog)}
         eng.materialize_runtime(runtime, self.catalog, second_lock, second_manifest)
@@ -194,7 +194,7 @@ class EngAgentsTests(unittest.TestCase):
         first_lock = {"source": str(self.catalog), "requestedRef": "v1", "commit": "1111111111111", "digest": eng.catalog_digest(self.catalog, first_manifest), "materializedFrom": str(self.catalog)}
         eng.materialize_runtime(runtime, self.catalog, first_lock, first_manifest)
         original_current = os.readlink(runtime / ".eng-agents/current")
-        (self.catalog / ".codex/agents/worker.toml").write_text('name="worker"\ndescription="v2"\n')
+        (self.catalog / "agents/worker.toml").write_text('name="worker"\ndescription="v2"\n')
         second_manifest = eng.validate_catalog(self.catalog)
         second_lock = {"source": str(self.catalog), "requestedRef": "v2", "commit": "2222222222222", "digest": eng.catalog_digest(self.catalog, second_manifest), "materializedFrom": str(self.catalog)}
         with mock.patch.object(eng, "_managed_link", side_effect=OSError("injected failure")):

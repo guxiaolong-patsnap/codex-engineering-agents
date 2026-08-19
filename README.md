@@ -13,7 +13,7 @@ codex-engineering-agents
 └── Mac mini runtime project：生成态 agent / skill / 配置 / 状态
 ```
 
-- **本仓拥有**：`.codex/agents/*.toml`、`.agents/skills/*/SKILL.md`、逻辑集成声明、catalog manifest/schema、内容校验与测试。
+- **本仓拥有**：`agents/*.toml`、`agents/skills/*/SKILL.md`、逻辑集成声明、catalog manifest/schema、内容校验与测试。
 - **插件拥有**：`plugins/eng-agents` 中的内容获取与固定版本、runtime project 生成、业务仓绑定、MCP/CLI 安装和健康检查、Scheduled Task reconcile、升级与回滚。
 - **runtime project 拥有**：实例配置、凭证引用、锁、claim、cursor、日志和真实 Scheduled Task ID。生成态文件不得回写本仓。
 
@@ -21,13 +21,13 @@ codex-engineering-agents
 
 ```text
 .
-├── .codex/agents/                         # Codex sub-agent 发现路径（唯一作者源）
+├── agents/                                # agent 与 workflow skill 的唯一作者源
 │   ├── coding.toml
-│   └── security.toml
-├── .agents/skills/                        # Codex repo skill 发现路径（唯一作者源）
-│   ├── issue-pipeline/SKILL.md
-│   ├── security-review/SKILL.md
-│   └── scheduled-issue-poll/SKILL.md
+│   ├── security.toml
+│   └── skills/
+│       ├── issue-pipeline/SKILL.md
+│       ├── security-review/SKILL.md
+│       └── scheduled-issue-poll/SKILL.md
 ├── catalog/
 │   ├── manifest.json                      # 插件消费的 v1 内容清单
 │   └── manifest.schema.json               # canonical manifest schema
@@ -44,7 +44,7 @@ codex-engineering-agents
 └── CONTRIBUTING.md
 ```
 
-`.codex/agents` 与 `.agents/skills` 是 Codex 的发现路径，必须保留。catalog 中的 agent 路径必须指向 TOML 文件，skill 路径必须指向完整 skill 目录；这样 digest、密钥扫描和物化都会覆盖 `scripts/`、`references/`、`assets/` 等配套资源。
+`agents/` 是本仓唯一的作者源。catalog 中的 agent 路径必须指向 `agents/*.toml`，skill 路径必须指向完整 `agents/skills/<id>/` 目录；插件在生成 runtime 时将它们映射到 Codex 标准的 `.codex/agents` 与 `.agents/skills` 发现路径。这样 digest、密钥扫描和物化都会覆盖 `scripts/`、`references/`、`assets/` 等配套资源。
 
 ## Catalog 契约
 

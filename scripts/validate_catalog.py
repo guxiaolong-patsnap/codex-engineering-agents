@@ -191,8 +191,8 @@ def _check_skill_path(
     except ValueError:
         errors.append(f"{location}: path escapes the catalog root")
         return None
-    if directory != root / ".agents/skills" / identifier:
-        errors.append(f"{location}: skill must use .agents/skills/<id>")
+    if directory != root / "agents/skills" / identifier:
+        errors.append(f"{location}: skill must use agents/skills/<id>")
     skill_file = directory / "SKILL.md"
     if not directory.is_dir() or not skill_file.is_file():
         errors.append(f"{location}: path must be a skill directory containing SKILL.md")
@@ -256,8 +256,8 @@ def _validate_discovery_coverage(
     declared_integrations: set[Path],
     errors: list[str],
 ) -> None:
-    actual_agents = set((root / ".codex/agents").glob("*.toml"))
-    actual_skills = set((root / ".agents/skills").glob("*/SKILL.md"))
+    actual_agents = set((root / "agents").glob("*.toml"))
+    actual_skills = set((root / "agents/skills").glob("*/SKILL.md"))
     actual_integrations = set((root / "integrations").glob("*/*/integration.json"))
     for label, actual, declared in (
         ("agent", actual_agents, declared_agents),
@@ -358,8 +358,8 @@ def validate_catalog(root: Path) -> list[str]:
         if target:
             declared_agents.add(target)
             source_paths.append(target)
-            if target.parent != root / ".codex/agents":
-                errors.append(f"{location}: agent TOML must be directly under .codex/agents")
+            if target.parent != root / "agents":
+                errors.append(f"{location}: agent TOML must be directly under agents/")
             data = _load_toml(target, errors) if target.is_file() else None
             if data is not None:
                 if data.get("name") != identifier or target.stem != identifier:

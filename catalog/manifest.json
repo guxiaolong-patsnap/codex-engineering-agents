@@ -1,21 +1,21 @@
 {
   "$schema": "./manifest.schema.json",
   "apiVersion": "eng-agents.patsnap.com/v1",
-  "catalogVersion": "1.0.0",
+  "catalogVersion": "1.0.1",
   "compatibility": {
     "plugin": ">=1.0.0 <2.0.0"
   },
   "agents": [
     {
       "id": "coding",
-      "path": ".codex/agents/coding.toml",
+      "path": "agents/coding.toml",
       "owner": "engineering-productivity",
       "skillDependencies": [],
       "integrationDependencies": []
     },
     {
       "id": "security",
-      "path": ".codex/agents/security.toml",
+      "path": "agents/security.toml",
       "owner": "engineering-productivity",
       "skillDependencies": [],
       "integrationDependencies": []
@@ -24,7 +24,7 @@
   "skills": [
     {
       "id": "issue-pipeline",
-      "path": ".agents/skills/issue-pipeline",
+      "path": "agents/skills/issue-pipeline",
       "owner": "engineering-productivity",
       "kind": "dispatcher",
       "agentDependencies": ["coding", "security"],
@@ -33,7 +33,7 @@
     },
     {
       "id": "security-review",
-      "path": ".agents/skills/security-review",
+      "path": "agents/skills/security-review",
       "owner": "engineering-productivity",
       "kind": "dispatcher",
       "agentDependencies": ["security"],
@@ -42,7 +42,7 @@
     },
     {
       "id": "scheduled-issue-poll",
-      "path": ".agents/skills/scheduled-issue-poll",
+      "path": "agents/skills/scheduled-issue-poll",
       "owner": "engineering-productivity",
       "kind": "dispatcher",
       "agentDependencies": [],

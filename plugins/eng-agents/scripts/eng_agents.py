@@ -203,16 +203,16 @@ def validate_catalog(root: pathlib.Path) -> dict[str, Any]:
             path = safe_catalog_path(root, raw_path, kind=plural[:-1])
             if plural == "agents":
                 rel = pathlib.PurePosixPath(raw_path)
-                if rel.parent != pathlib.PurePosixPath(".codex/agents") or rel.suffix != ".toml" or rel.stem != item_id or not path.is_file():
-                    raise ControlPlaneError(f"Agent {item_id} must be a .codex/agents/*.toml file")
+                if rel.parent not in {pathlib.PurePosixPath("agents"), pathlib.PurePosixPath(".codex/agents")} or rel.suffix != ".toml" or rel.stem != item_id or not path.is_file():
+                    raise ControlPlaneError(f"Agent {item_id} must be an agents/*.toml file")
                 name_match = re.search(r'(?m)^name\s*=\s*"([^"]+)"\s*$', path.read_text(encoding="utf-8"))
                 if not name_match or name_match.group(1) != item_id:
                     raise ControlPlaneError(f"Agent {item_id} TOML name does not match")
             elif plural == "skills":
                 rel = pathlib.PurePosixPath(raw_path)
                 skill_file = path / "SKILL.md"
-                if rel != pathlib.PurePosixPath(f".agents/skills/{item_id}") or not path.is_dir() or not skill_file.is_file():
-                    raise ControlPlaneError(f"Skill {item_id} path must be .agents/skills/{item_id}")
+                if rel not in {pathlib.PurePosixPath(f"agents/skills/{item_id}"), pathlib.PurePosixPath(f".agents/skills/{item_id}")} or not path.is_dir() or not skill_file.is_file():
+                    raise ControlPlaneError(f"Skill {item_id} path must be agents/skills/{item_id}")
                 header = skill_file.read_text(encoding="utf-8")[:4096]
                 match = re.search(r"(?m)^name:\s*([^\s]+)\s*$", header)
                 if not match or match.group(1) != item_id:
@@ -352,10 +352,20 @@ def _copy_declared_assets(catalog: pathlib.Path, staging: pathlib.Path, manifest
     agents_dir.mkdir(parents=True); skills_dir.mkdir(parents=True)
     for entry in manifest["agents"]:
         src = safe_catalog_path(catalog, entry["path"], kind="agent")
-        shutil.copy2(src, agents_dir / src.name)
+        runtime_target = agents_dir / src.name
+        source_target = staging / pathlib.Path(*pathlib.PurePosixPath(entry["path"]).parts)
+        shutil.copy2(src, runtime_target)
+        if source_target != runtime_target:
+            source_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, source_target)
     for entry in manifest["skills"]:
         src = safe_catalog_path(catalog, entry["path"], kind="skill")
-        shutil.copytree(src if src.is_dir() else src.parent, skills_dir / _entry_id(entry, "skill"))
+        runtime_target = skills_dir / _entry_id(entry, "skill")
+        source_target = staging / pathlib.Path(*pathlib.PurePosixPath(entry["path"]).parts)
+        shutil.copytree(src if src.is_dir() else src.parent, runtime_target)
+        if source_target != runtime_target:
+            source_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(src if src.is_dir() else src.parent, source_target)
 
 
 def _runtime_agents_md(lock: dict[str, Any]) -> str:
@@ -699,6 +709,38 @@ def build_schedule_intent(runtime: pathlib.Path, bindings: dict[str, Any], manif
     return {"apiVersion": API_VERSION, "kind": "ScheduleIntent", "metadata": {"id": f"eng-agents-{runtime.name}", "name": auto.get("name") or f"Engineering Agents — {entrypoint}"}, "spec": {"enabled": auto.get("enabled", True), "entrypoint": {"name": entrypoint, "skill": skill}, "prompt": prompt, "schedule": {"intervalMinutes": interval, "rrule": f"RRULE:FREQ=MINUTELY;INTERVAL={interval}"}, "execution": {"environment": "local", "instancePath": instance_path, "runtimeStateHelper": helper_path, "projectPaths": paths}}}
 
 
+def current_catalog_root(runtime: pathlib.Path) -> pathlib.Path:
+    generations = (runtime / ".eng-agents" / "generations").resolve()
+    current = runtime / ".eng-agents" / "current"
+    if not current.exists():
+        raise ControlPlaneError("Runtime has no active catalog generation")
+    resolved = current.resolve()
+    if resolved.parent != generations or not resolved.is_dir():
+        raise ControlPlaneError("Runtime current generation escapes the managed generations directory")
+    return resolved
+
+
+def payload_matches(source: pathlib.Path, target: pathlib.Path) -> bool:
+    if source.is_file():
+        return target.is_file() and not target.is_symlink() and source.read_bytes() == target.read_bytes()
+    if not source.is_dir() or not target.is_dir() or target.is_symlink():
+        return False
+    source_files = {
+        child.relative_to(source): child
+        for child in source.rglob("*")
+        if child.is_file() and not child.is_symlink()
+    }
+    target_files = {
+        child.relative_to(target): child
+        for child in target.rglob("*")
+        if child.is_file() and not child.is_symlink()
+    }
+    return set(source_files) == set(target_files) and all(
+        source_files[relative].read_bytes() == target_files[relative].read_bytes()
+        for relative in source_files
+    )
+
+
 def load_runtime(runtime: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     lock = _json(runtime / ".eng-agents/catalog.lock.json")
     required_lock = {"apiVersion", "kind", "controllerVersion", "catalogApiVersion", "catalogVersion", "compatibility", "selected", "effectivePolicy", "runtimeStateHelperDigest", "source", "requestedRef", "commit", "digest", "materializedFrom"}
@@ -708,8 +750,9 @@ def load_runtime(runtime: pathlib.Path) -> tuple[dict[str, Any], dict[str, Any],
     spec = instance.get("spec") if isinstance(instance.get("spec"), dict) else {}
     if instance.get("apiVersion") != API_VERSION or instance.get("kind") != "Instance" or spec != {"runtimePath": str(runtime.resolve()), "controllerVersion": PLUGIN_VERSION}:
         raise ControlPlaneError("instance.json does not satisfy the v1 runtime contract")
-    manifest = validate_catalog(runtime)
-    if catalog_digest(runtime, manifest) != lock.get("digest"):
+    catalog_root = current_catalog_root(runtime)
+    manifest = validate_catalog(catalog_root)
+    if catalog_digest(catalog_root, manifest) != lock.get("digest"):
         raise ControlPlaneError("Materialized runtime digest does not match catalog.lock.json")
     bindings = validate_bindings(_json(runtime / ".eng-agents/bindings.json"), runtime, manifest)
     return lock, manifest, bindings
@@ -760,11 +803,28 @@ def doctor(runtime: pathlib.Path, *, deep: bool = False) -> dict[str, Any]:
     try:
         lock, manifest, bindings = load_runtime(runtime)
         record("runtime-contracts", True, "instance, lock, bindings and catalog are readable")
-        actual = catalog_digest(runtime, manifest)
+        actual = catalog_digest(current_catalog_root(runtime), manifest)
         record("catalog-digest", actual == lock.get("digest"), f"expected {lock.get('digest')}, got {actual}")
-        missing_agents = [item for item, entry in manifest["_agentsById"].items() if not (runtime / ".codex/agents" / pathlib.Path(entry["path"]).name).is_file()]
-        missing_skills = [item for item in manifest["_skillsById"] if not (runtime / ".agents/skills" / item / "SKILL.md").is_file()]
-        record("materialized-assets", not missing_agents and not missing_skills, f"missing agents={missing_agents}, skills={missing_skills}")
+        catalog_root = current_catalog_root(runtime)
+        missing_agents = []
+        missing_skills = []
+        changed_agents = []
+        changed_skills = []
+        for item, entry in manifest["_agentsById"].items():
+            source = safe_catalog_path(catalog_root, entry["path"], kind="agent")
+            target = runtime / ".codex/agents" / pathlib.Path(entry["path"]).name
+            if not target.is_file(): missing_agents.append(item)
+            elif not payload_matches(source, target): changed_agents.append(item)
+        for item, entry in manifest["_skillsById"].items():
+            source = safe_catalog_path(catalog_root, entry["path"], kind="skill")
+            target = runtime / ".agents/skills" / item
+            if not (target / "SKILL.md").is_file(): missing_skills.append(item)
+            elif not payload_matches(source, target): changed_skills.append(item)
+        record(
+            "materialized-assets",
+            not missing_agents and not missing_skills and not changed_agents and not changed_skills,
+            f"missing agents={missing_agents}, skills={missing_skills}; changed agents={changed_agents}, skills={changed_skills}",
+        )
         project_failures = []
         for project in bindings["projects"]:
             if project.get("enabled", True):
@@ -886,8 +946,9 @@ def main(argv: list[str] | None = None) -> int:
             report = doctor(runtime, deep=args.deep); print(json.dumps(report, ensure_ascii=False, indent=2)); return 0 if report["ok"] else 1
         if args.command == "ui" and (runtime / ".eng-agents/catalog.lock.json").is_file():
             active_lock = _json(runtime / ".eng-agents/catalog.lock.json")
-            active_manifest = validate_catalog(runtime)
-            if catalog_digest(runtime, active_manifest) != active_lock.get("digest"):
+            active_catalog = current_catalog_root(runtime)
+            active_manifest = validate_catalog(active_catalog)
+            if catalog_digest(active_catalog, active_manifest) != active_lock.get("digest"):
                 raise ControlPlaneError("Active runtime failed digest verification")
             rc = run_ui(runtime, active_manifest, args.host, args.port, not args.no_browser, args.timeout)
             if rc: return rc

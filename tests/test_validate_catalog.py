@@ -56,11 +56,11 @@ class CatalogValidationTests(unittest.TestCase):
         self.assert_error_contains("invalid JSON")
 
     def test_invalid_toml_is_reported(self) -> None:
-        (self.root / ".codex/agents/coding.toml").write_text('name = "unterminated')
+        (self.root / "agents/coding.toml").write_text('name = "unterminated')
         self.assert_error_contains("invalid TOML")
 
     def test_invalid_frontmatter_is_reported(self) -> None:
-        path = self.root / ".agents/skills/security-review/SKILL.md"
+        path = self.root / "agents/skills/security-review/SKILL.md"
         path.write_text(path.read_text().replace("name: security-review", "name: wrong-name"))
         self.assert_error_contains("frontmatter name")
 
@@ -71,7 +71,7 @@ class CatalogValidationTests(unittest.TestCase):
         self.assert_error_contains("path must stay relative")
 
     def test_agent_name_mismatch_is_reported(self) -> None:
-        path = self.root / ".codex/agents/coding.toml"
+        path = self.root / "agents/coding.toml"
         path.write_text(path.read_text().replace('name = "coding"', 'name = "other"'))
         self.assert_error_contains("TOML name")
 
@@ -88,12 +88,12 @@ class CatalogValidationTests(unittest.TestCase):
         self.assert_error_contains("dependency cycle")
 
     def test_embedded_secret_is_reported(self) -> None:
-        path = self.root / ".agents/skills/security-review/SKILL.md"
+        path = self.root / "agents/skills/security-review/SKILL.md"
         path.write_text(path.read_text() + "\nExample: glpat-abcdefghijklmnop\n")
         self.assert_error_contains("possible embedded secret")
 
     def test_skill_resource_is_secret_scanned(self) -> None:
-        path = self.root / ".agents/skills/security-review/scripts/helper.txt"
+        path = self.root / "agents/skills/security-review/scripts/helper.txt"
         path.parent.mkdir()
         path.write_text("glpat-abcdefghijklmnop\n")
         self.assert_error_contains("possible embedded secret")
@@ -107,7 +107,7 @@ class CatalogValidationTests(unittest.TestCase):
     def test_skill_symlink_is_rejected(self) -> None:
         outside = self.root.parent / "outside.txt"
         outside.write_text("host-local data\n")
-        link = self.root / ".agents/skills/security-review/linked.txt"
+        link = self.root / "agents/skills/security-review/linked.txt"
         link.symlink_to(outside)
         self.assert_error_contains("must not contain symlinks")
 

@@ -6,8 +6,8 @@ This repository has two deliberately separate layers: the authored Engineering A
 
 Allowed content:
 
-- project-discoverable sub-agent definitions in `.codex/agents/*.toml`;
-- repository-discoverable skills in `.agents/skills/<id>/SKILL.md` and necessary skill resources;
+- sub-agent definitions in `agents/*.toml`;
+- workflow skills in `agents/skills/<id>/SKILL.md` and necessary skill resources;
 - the distributable plugin under `plugins/eng-agents/`;
 - secret-free logical CLI/MCP integration declarations under `integrations/`;
 - catalog metadata, canonical schema, deterministic validator, tests, and contributor documentation.
@@ -16,7 +16,7 @@ Do not add runtime `config.toml`, bound-repository files, local paths, credentia
 
 ## Authoring invariants
 
-- Preserve `.codex/agents` and `.agents/skills` discovery paths.
+- Preserve the `agents/*.toml` and `agents/skills/<id>/` authoring paths. The plugin alone maps them to Codex discovery paths in generated runtimes.
 - Every authored agent, skill, and integration must be declared exactly once in `catalog/manifest.json`.
 - IDs, filenames/directories, TOML `name`, and skill frontmatter `name` must agree.
 - Dependencies must be typed, resolvable, and acyclic.

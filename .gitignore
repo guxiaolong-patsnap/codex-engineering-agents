@@ -1,5 +1,12 @@
 .DS_Store
+__pycache__/
+*.py[cod]
+.coverage
+.pytest_cache/
+
+# Runtime/control-plane state must never be authored in this catalog.
 .git_projects.json
+.eng-agents/
 .codex/automations/
 .codex/runs/
-.codex/.eng-agents-manifest.json
+.codex/config.toml

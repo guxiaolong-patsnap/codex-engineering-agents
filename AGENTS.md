@@ -1,30 +1,38 @@
-# Engineering Agents
+# Engineering Agents content catalog
 
-Primary thread is the **supervisor**: route work, spawn subagents, synthesize results. Do not merge without human intent.
+This repository has two deliberately separate layers: the authored Engineering Agents catalog and the self-contained `eng-agents` Codex plugin. Neither is a generated runtime project.
 
-Bound repos are listed in `.git_projects.json`; mount with `--add-dir`.
+## Scope
 
-## Agents
+Allowed content:
 
-| Agent | Sandbox | Role |
-|-------|---------|------|
-| `coding` | `workspace-write` | Implement features, refactors, fixes |
-| `security` | `read-only` | Security audit |
+- project-discoverable sub-agent definitions in `.codex/agents/*.toml`;
+- repository-discoverable skills in `.agents/skills/<id>/SKILL.md` and necessary skill resources;
+- the distributable plugin under `plugins/eng-agents/`;
+- secret-free logical CLI/MCP integration declarations under `integrations/`;
+- catalog metadata, canonical schema, deterministic validator, tests, and contributor documentation.
 
-```text
-Spawn coding to …
-Spawn security to …
+Do not add runtime `config.toml`, bound-repository files, local paths, credentials, automation specifications, schedule IDs, run logs, locks, claims, cursors, or generated runtime artifacts. They belong only in the generated Mac mini runtime project. Plugin lifecycle code belongs under `plugins/eng-agents/` and must remain self-contained.
+
+## Authoring invariants
+
+- Preserve `.codex/agents` and `.agents/skills` discovery paths.
+- Every authored agent, skill, and integration must be declared exactly once in `catalog/manifest.json`.
+- IDs, filenames/directories, TOML `name`, and skill frontmatter `name` must agree.
+- Dependencies must be typed, resolvable, and acyclic.
+- Agent TOMLs define role, instructions, and sandbox only. The runtime control plane chooses model and reasoning policy.
+- Integration declarations name logical capabilities and runtime-managed authentication modes; never store secret values.
+- Dispatcher skills may coordinate declared agents/skills. Avoid recursive dispatch cycles.
+- `scheduled-issue-poll` owns issue polling behavior and invokes `$issue-pipeline`; setup and scheduling stay in the plugin.
+- Do not merge or publish without explicit human intent.
+
+## Required validation
+
+Run before handoff:
+
+```bash
+python3 scripts/validate_catalog.py
+python3 -m unittest discover -s tests -v
 ```
 
-## Skills (repo)
-
-- `$issue-pipeline` — issue → coding → security
-- `$security-review` — audit only
-
-Install / bind repos / automations via the **eng-agents** plugin (`$eng-agents-setup`).
-
-## Gates
-
-- No merge to protected branches without human intent
-- No secrets in handoffs or `.git_projects.json`
-- Prefer the smallest correct change
+For each new or changed skill, also run the `skill-creator` `quick_validate.py` against its directory. Report validation evidence and any compatibility risk.

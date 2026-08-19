@@ -1,0 +1,42 @@
+{
+  "name": "eng-agents",
+  "version": "1.0.0",
+  "description": "Mac setup and lifecycle control plane for generated Engineering Agents runtime projects.",
+  "author": {
+    "name": "PatSnap"
+  },
+  "homepage": "https://github.com/guxiaolong-patsnap/codex-engineering-agents/tree/main/plugins/eng-agents",
+  "repository": "https://github.com/guxiaolong-patsnap/codex-engineering-agents.git",
+  "license": "UNLICENSED",
+  "keywords": [
+    "engineering-agents",
+    "eng-agents",
+    "codex",
+    "subagents",
+    "bootstrap",
+    "patsnap"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Engineering Agents",
+    "shortDescription": "Set up and operate Engineering Agents runtimes",
+    "longDescription": "Resolves a versioned Engineering Agents catalog, validates it, materializes a generated Codex runtime project, binds code repositories, and produces supported Scheduled Task desired state.",
+    "developerName": "PatSnap",
+    "category": "Product & Engineering",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents",
+    "privacyPolicyURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents/tree/main/plugins/eng-agents",
+    "termsOfServiceURL": "https://github.com/guxiaolong-patsnap/codex-engineering-agents/tree/main/plugins/eng-agents",
+    "defaultPrompt": [
+      "Run $eng-agents-setup to create an Engineering Agents runtime project"
+    ],
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png",
+    "screenshots": []
+  }
+}

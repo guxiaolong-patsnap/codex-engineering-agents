@@ -1,0 +1,26 @@
+{
+  "apiVersion": "eng-agents.patsnap.com/integration/v1",
+  "id": "company-gitlab",
+  "kind": "cli",
+  "description": "Read-only access to the company GitLab through the approved Skill Gateway client.",
+  "provider": "company-gitlab-api-query",
+  "executable": "python3",
+  "arguments": [
+    "{skill:company-gitlab-api-query}/scripts/gitlab_query.py"
+  ],
+  "capabilities": [
+    "project.resolve",
+    "issue.list",
+    "issue.read",
+    "merge-request.read",
+    "pipeline.read"
+  ],
+  "access": "read-only",
+  "authentication": {
+    "mode": "gateway-sso",
+    "managedBy": "runtime"
+  },
+  "healthCheck": {
+    "arguments": ["capabilities"]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://patsnap.com/schemas/eng-agents/catalog-manifest-v1.json",
+  "title": "Engineering Agents authoring catalog manifest v1",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "catalogVersion",
+    "compatibility",
+    "agents",
+    "skills",
+    "integrations",
+    "entrypoints"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "apiVersion": { "const": "eng-agents.patsnap.com/v1" },
+    "catalogVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "compatibility": {
+      "type": "object",
+      "required": ["plugin"],
+      "properties": {
+        "plugin": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "agents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/agent" }
+    },
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/skill" }
+    },
+    "integrations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/integration" }
+    },
+    "entrypoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["skill"],
+        "properties": {
+          "skill": { "$ref": "#/$defs/id" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "idArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["id", "path", "owner", "skillDependencies", "integrationDependencies"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "owner": { "$ref": "#/$defs/id" },
+        "skillDependencies": { "$ref": "#/$defs/idArray" },
+        "integrationDependencies": { "$ref": "#/$defs/idArray" }
+      },
+      "additionalProperties": false
+    },
+    "skill": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "owner",
+        "kind",
+        "agentDependencies",
+        "skillDependencies",
+        "integrationDependencies"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "owner": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["dispatcher", "specialist"] },
+        "agentDependencies": { "$ref": "#/$defs/idArray" },
+        "skillDependencies": { "$ref": "#/$defs/idArray" },
+        "integrationDependencies": { "$ref": "#/$defs/idArray" }
+      },
+      "additionalProperties": false
+    },
+    "integration": {
+      "type": "object",
+      "required": ["id", "path", "owner", "kind"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "path": { "$ref": "#/$defs/relativePath" },
+        "owner": { "$ref": "#/$defs/id" },
+        "kind": { "enum": ["cli", "mcp"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

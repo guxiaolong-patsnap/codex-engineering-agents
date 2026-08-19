@@ -1,7 +1,5 @@
 name = "coding"
 description = "Use when you need to implement features, refactor code, fix bugs, or open a draft change set toward a merge request."
-model = "gpt-5.4"
-model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 nickname_candidates = ["Coding"]
 developer_instructions = """

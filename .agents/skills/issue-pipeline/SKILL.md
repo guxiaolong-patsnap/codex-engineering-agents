@@ -1,9 +1,9 @@
 ---
 name: issue-pipeline
-description: Issue- or AC-driven SDLC — spawn coding to implement, then security to audit, then hand back for human merge request.
+description: Run an issue- or acceptance-criteria-driven SDLC handoff by dispatching coding implementation and security review without merging.
 ---
 
-# issue-pipeline
+# Issue pipeline
 
 ## Steps
 
@@ -14,7 +14,7 @@ description: Issue- or AC-driven SDLC — spawn coding to implement, then securi
 
 ## Constraints
 
-- Agents must exist in `.codex/agents/` (open/Trust this product repo after `$eng-agents-setup`)
+- The runtime must provide the catalog-declared `coding` and `security` agents
 - No force-push or merge to protected branches
 - No invented requirements; escalate AC gaps
 

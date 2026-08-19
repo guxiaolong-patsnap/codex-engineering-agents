@@ -1,9 +1,9 @@
 ---
 name: security-review
-description: Spawn security subagent to audit auth, injection, data exposure, and dependency risks.
+description: Dispatch the security subagent to audit authentication, injection, data exposure, and dependency risks without changing code.
 ---
 
-# security-review
+# Security review
 
 1. Scope files / endpoints / flows.
 2. `Spawn security to review …`
